@@ -34,7 +34,7 @@ jobs:
       - name: Add SSH Key to Agent
         uses: webfactory/ssh-agent@v0.5.4
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_2 }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       #Performs the actual deployment.
       #It consists of a multi-line script (run:) Prints the current working directory and lists its contents.
       #Outputs a message indicating the start of the deployment.
