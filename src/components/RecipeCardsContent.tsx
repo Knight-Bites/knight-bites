@@ -39,7 +39,7 @@ const cardData = [
 function RecipeCardsContent(props: Props) {
   return (
     <Row xs={1} md={2} lg={3} className="g-4">
-      {cardData.map((card, index) => (
+      {cardData.map((_, index) => (
         <Col key={index} className="d-flex justify-content-center">
           <Card style={{ width: "22rem" }}>
             <Card.Img variant="top" src={cardImage} />
