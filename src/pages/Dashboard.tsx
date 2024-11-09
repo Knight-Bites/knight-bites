@@ -45,15 +45,13 @@ function Dashboard() {
 
           <Tab.Content className="mt-3">
             <Tab.Pane eventKey="explore">
-              <p>Content for Explore tab</p>
+              <p>Explore search bar</p>
               <RecipeCardsContent tabType="explore" />
             </Tab.Pane>
             <Tab.Pane eventKey="favorites">
-              <p>Content for Favorites tab</p>
               <RecipeCardsContent tabType="favorites" />
             </Tab.Pane>
             <Tab.Pane eventKey="my-recipes">
-              <p>Content for My Recipes tab</p>
               <RecipeCardsContent tabType="my-recipes" />
             </Tab.Pane>
           </Tab.Content>

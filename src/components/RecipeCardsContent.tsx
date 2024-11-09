@@ -44,19 +44,16 @@ function RecipeCardsContent(props: Props) {
           <Card style={{ width: "22rem" }}>
             <Card.Img variant="top" src={cardImage} />
             <Card.Body>
-              <Card.Title>Card Title</Card.Title>
-              <Card.Text>
-                {props.tabType + " " + card.title + " " + index}
-              </Card.Text>
+              <Card.Title>{props.tabType + " Card Title"}</Card.Title>
+              <Card.Text>by Author</Card.Text>
             </Card.Body>
             <ListGroup className="list-group-flush">
-              <ListGroup.Item>Cras justo odio</ListGroup.Item>
-              <ListGroup.Item>Dapibus ac facilisis in</ListGroup.Item>
-              <ListGroup.Item>Vestibulum at eros</ListGroup.Item>
+              <ListGroup.Item>Ingredient 1</ListGroup.Item>
+              <ListGroup.Item>Ingredient 2</ListGroup.Item>
+              <ListGroup.Item>Ingredient 3</ListGroup.Item>
             </ListGroup>
             <Card.Body>
-              <Card.Link href="#">Card Link</Card.Link>
-              <Card.Link href="#">Another Link</Card.Link>
+              <Card.Link>Favorites or Actions button</Card.Link>
             </Card.Body>
           </Card>
         </Col>
