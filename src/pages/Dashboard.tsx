@@ -2,7 +2,6 @@ import NavBar from "../components/NavBar";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Tab from "react-bootstrap/Tab";
-import RecipeCardsContent from "../components/RecipeCardsContent";
 import { FaPlus } from "react-icons/fa";
 import Button from "react-bootstrap/Button";
 import { useNavigate } from "react-router-dom";
@@ -22,109 +21,25 @@ function Dashboard() {
   const [userId, setUserId] = useState<string>("");
   const [allRecipes, setAllRecipes] = useState<RecipeType[]>([]);
   const [currentRecipes, setCurrentRecipes] = useState<RecipeType[]>([]);
+  const [favoriteRecipeIds, setFavoriteRecipeIds] = useState<string[]>([]);
   const [myRecipes, setMyRecipes] = useState<RecipeType[]>([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [recipeToDelete, setRecipeToDelete] = useState<RecipeType>(
     {} as RecipeType
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showSearchCriteriaBox, setShowSearchCriteriaBox] =
     useState<boolean>(false);
-
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
-  async function getAllRecipes(): Promise<object[]> {
-    const results = await searchRecipes("");
-    return results;
-  }
-
-  async function getMyRecipes(): Promise<object[]> {
-    if (userId === "") {
-      alert("cannot get my recipes because no user is logged in");
-      return [];
-    }
-    let requestObject = { userId: userId };
-    let request = JSON.stringify(requestObject);
-
-    try {
-      const response = await fetch(
-        "http://knightbites.xyz:5000/api/displayRecipes",
-        {
-          method: "POST",
-          body: request,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      const responseObject = JSON.parse(await response.text());
-      const results: object[] = responseObject.recipes || [];
-
-      return results;
-    } catch (error: any) {
-      alert(error.toString());
-      return [];
-    }
-  }
-
-  useEffect(() => {
-    const loadUserId = () => {
-      const userData = getUserData();
-      if (Object.keys(userData).length === 0 || userData.id === "") {
-        alert("error: no user logged in");
-        return;
-      }
-      setUserId(userData.id);
-    };
-    loadUserId();
-  }, []);
-
-  useEffect(() => {
-    if (userId) {
-      const fetchAllRecipes = async () => {
-        const fetchedRecipes = await getAllRecipes();
-        setAllRecipes(fetchedRecipes as RecipeType[]);
-        setCurrentRecipes(fetchedRecipes as RecipeType[]);
-      };
-      const fetchMyRecipes = async () => {
-        const fetchedRecipes = await getMyRecipes();
-        setMyRecipes(fetchedRecipes as RecipeType[]);
-      };
-      fetchAllRecipes();
-      fetchMyRecipes();
-    }
-  }, [userId]);
-
-  function handleInitiateDelete(recipe: RecipeType): void {
-    setShowDeleteModal(true);
-    setRecipeToDelete(recipe);
-  }
-
-  function doDeleteRecipe(recipe: RecipeType): void {
-    alert("deleting recipe " + recipe.recipeName + "!");
-    setShowDeleteModal(false);
-    return;
-  }
-
-  function onDeleteModalClose() {
-    setShowDeleteModal(false);
-    setRecipeToDelete({} as RecipeType);
-  }
-
-  async function onSearchSubmit(searchQuery: string) {
-    setSearchQuery(searchQuery);
-    const results: object[] = await searchRecipes(searchQuery);
-    const recipeResults = results as RecipeType[];
-    setCurrentRecipes(recipeResults);
-    setShowSearchCriteriaBox(true);
-    return;
-  }
-
   async function searchRecipes(searchQuery: string): Promise<object[]> {
-    let requestObject = { search: searchQuery };
-    let request = JSON.stringify(requestObject);
+    const requestObject: object = { search: searchQuery };
+    const request: string = JSON.stringify(requestObject);
 
     try {
-      const response = await fetch(
+      // Send the request
+      const response: Response = await fetch(
         "http://knightbites.xyz:5000/api/searchrecipes",
         {
           method: "POST",
@@ -133,23 +48,226 @@ function Dashboard() {
         }
       );
 
+      // Parse the response
       const responseObject = JSON.parse(await response.text());
 
-      const results: object[] = responseObject.results;
-
+      // Return the results
+      const results: object[] = responseObject["results"];
       return results;
-    } catch (error: any) {
-      alert(error.toString());
+    } catch (error) {
+      alert(error);
       return [];
     }
   }
 
+  // Called when a user presses the search button after typing a query
+  async function onSearchSubmit(searchQuery: string) {
+    setSearchQuery(searchQuery);
+    const results: object[] = await searchRecipes(searchQuery);
+    const recipeResults: RecipeType[] = results as RecipeType[];
+    setCurrentRecipes(recipeResults);
+    setShowSearchCriteriaBox(true);
+    return;
+  }
+
+  // Called when a user presses the Clear button in the search criteria box
   function clearSearch() {
     setCurrentRecipes(allRecipes);
     setShowSearchCriteriaBox(false);
     setSearchQuery("");
   }
 
+  // Getting all recipes is nothing more than a search for the empty string
+  async function getAllRecipes(): Promise<object[]> {
+    const results: object[] = await searchRecipes("");
+    return results;
+  }
+
+  async function getMyRecipes(): Promise<object[]> {
+    if (userId === "") {
+      alert("Cannot get my recipes because no user is logged in");
+      return [];
+    }
+    const requestObject: object = { userId: userId };
+    const request: string = JSON.stringify(requestObject);
+
+    try {
+      // Send the request
+      const response: Response = await fetch(
+        "http://knightbites.xyz:5000/api/displayRecipes",
+        {
+          method: "POST",
+          body: request,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      // Parse the response
+      const responseObject = JSON.parse(await response.text());
+      const results: object[] = responseObject["recipes"] || [];
+
+      // Return the results
+      return results;
+    } catch (error) {
+      alert(error);
+      return [];
+    }
+  }
+
+  async function getFavoriteRecipeIds(): Promise<string[]> {
+    if (userId === "") {
+      alert("Cannot get favorite recipes because no user is logged in");
+      return [];
+    }
+    const requestObject: object = { userId: userId };
+    const request: string = JSON.stringify(requestObject);
+
+    try {
+      // Send the request
+      const response: Response = await fetch(
+        "http://knightbites.xyz:5000/api/favoritesGet",
+        {
+          method: "POST",
+          body: request,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      // Parse the response
+      const responseObject = JSON.parse(await response.text());
+      const results: string[] = responseObject["favorites"] || [];
+
+      // Return the results
+      return results;
+    } catch (error) {
+      alert(error);
+      return [];
+    }
+  }
+
+  // Load the user's ID on loading the page
+  useEffect(() => {
+    const loadUserId = (): void => {
+      const userData = getUserData();
+      if (Object.keys(userData).length === 0 || userData["id"] === "") {
+        alert("error: no user logged in");
+        return;
+      }
+      setUserId(userData.id);
+    };
+    loadUserId();
+  }, []);
+
+  // Only load recipes once the userId is loaded
+  useEffect(() => {
+    if (userId && isLoading) {
+      const fetchAllRecipes = async () => {
+        const fetchedRecipes = await getAllRecipes();
+        setAllRecipes(fetchedRecipes as RecipeType[]);
+        setCurrentRecipes(fetchedRecipes as RecipeType[]);
+      };
+      const fetchFavoriteRecipeIds = async () => {
+        const fetchedRecipeIds = await getFavoriteRecipeIds();
+        setFavoriteRecipeIds(fetchedRecipeIds);
+      };
+      const fetchMyRecipes = async () => {
+        const fetchedRecipes = await getMyRecipes();
+        setMyRecipes(fetchedRecipes as RecipeType[]);
+      };
+      fetchAllRecipes();
+      fetchFavoriteRecipeIds();
+      fetchMyRecipes();
+      setIsLoading(false);
+    }
+  }, [userId, getAllRecipes, getFavoriteRecipeIds, getMyRecipes]);
+
+  const updateRecipes = () => {
+    const updatedAllRecipes = allRecipes.map((recipe) => {
+      if (favoriteRecipeIds.includes(recipe._id)) {
+        return { ...recipe, favorite: true };
+      } else {
+        return { ...recipe, favorite: false };
+      }
+    });
+    const updatedCurrentRecipes = currentRecipes.map((recipe) => {
+      if (favoriteRecipeIds.includes(recipe._id)) {
+        return { ...recipe, favorite: true };
+      } else {
+        return { ...recipe, favorite: false };
+      }
+    });
+    setAllRecipes(updatedAllRecipes);
+    setCurrentRecipes(updatedCurrentRecipes);
+  };
+
+  // Called when a user presses "Delete" in the kebab menu
+  function handleInitiateDelete(recipe: RecipeType): void {
+    setShowDeleteModal(true);
+    setRecipeToDelete(recipe);
+  }
+
+  // Called when a user confirms delete in the delete modal
+  function doDeleteRecipe(recipe: RecipeType): void {
+    alert("deleting recipe " + recipe.recipeName + "!");
+    setShowDeleteModal(false);
+    return;
+  }
+
+  // Called when a user closes the delete modal and cancels the delete
+  function onDeleteModalClose(): void {
+    setShowDeleteModal(false);
+    setRecipeToDelete({} as RecipeType);
+  }
+
+  async function favoriteOrUnfavorite(favorited: boolean, recipeId: string) {
+    let API_URL: string;
+
+    if (favorited) {
+      API_URL = "http://knightbites.xyz:5000/api/favoritesDelete";
+    } else {
+      API_URL = "http://knightbites.xyz:5000/api/favoritesAdd";
+    }
+
+    const requestObject: object = { userId: userId, recipeId: recipeId };
+    const request: string = JSON.stringify(requestObject);
+
+    try {
+      // Send the request
+      const response: Response = await fetch(API_URL, {
+        method: "POST",
+        body: request,
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // Parse the response
+      const responseObject = JSON.parse(await response.text());
+
+      if (responseObject["success"] !== "") {
+        // If currently favorited
+        if (favorited) {
+          // Need to unfavorite
+          setFavoriteRecipeIds(
+            favoriteRecipeIds.filter((id) => id !== recipeId)
+          );
+        }
+        // If currently unfavorited
+        else {
+          // Need to favorite
+          setFavoriteRecipeIds((favoriteRecipeIds) => [
+            ...favoriteRecipeIds,
+            recipeId,
+          ]);
+          updateRecipes();
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      alert(error);
+      return false;
+    }
+  }
   return (
     <>
       <NavBar />
@@ -208,27 +326,45 @@ function Dashboard() {
               </div>
 
               <Row xs={1} md={2} lg={3} className="g-4">
-                {currentRecipes.map((recipe, _) => (
+                {currentRecipes.map((recipe) => (
                   <RecipeCard
                     key={recipe._id}
                     recipe={recipe}
                     userId={userId}
                     onDelete={handleInitiateDelete}
+                    isFavorited={favoriteRecipeIds.includes(recipe._id)}
+                    favoriteOrUnfavorite={favoriteOrUnfavorite}
                   />
                 ))}
               </Row>
             </Tab.Pane>
             <Tab.Pane eventKey="favorites">
-              <RecipeCardsContent tabType="favorites" />
+              <Row xs={1} md={2} lg={3} className="g-4">
+                {allRecipes.map(
+                  (recipe) =>
+                    favoriteRecipeIds.includes(recipe._id) && (
+                      <RecipeCard
+                        key={recipe._id}
+                        recipe={recipe}
+                        userId={userId}
+                        onDelete={handleInitiateDelete}
+                        isFavorited={favoriteRecipeIds.includes(recipe._id)}
+                        favoriteOrUnfavorite={favoriteOrUnfavorite}
+                      />
+                    )
+                )}
+              </Row>
             </Tab.Pane>
             <Tab.Pane eventKey="my-recipes">
               <Row xs={1} md={2} lg={3} className="g-4">
-                {myRecipes.map((recipe, _) => (
+                {myRecipes.map((recipe) => (
                   <RecipeCard
                     key={recipe._id}
                     recipe={recipe}
                     userId={userId}
                     onDelete={handleInitiateDelete}
+                    isFavorited={favoriteRecipeIds.includes(recipe._id)}
+                    favoriteOrUnfavorite={favoriteOrUnfavorite}
                   />
                 ))}
               </Row>

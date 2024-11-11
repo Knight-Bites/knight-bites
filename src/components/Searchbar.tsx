@@ -12,7 +12,7 @@ interface SearchbarProps {
 function Searchbar({ onSearchSubmit }: SearchbarProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     if (searchQuery == null || searchQuery == "") {
       return;

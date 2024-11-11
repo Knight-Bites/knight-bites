@@ -4,6 +4,7 @@ type RecipeType = {
   recipeName: string;
   recipeIngredients: string[];
   imageEncoding: string;
+  favorite?: boolean | null;
 };
 
 export default RecipeType;

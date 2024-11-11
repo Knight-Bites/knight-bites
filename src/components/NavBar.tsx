@@ -10,7 +10,7 @@ import Image from "react-bootstrap/Image";
 function NavBar() {
   const navigate = useNavigate();
 
-  function doLogout() {
+  function doLogout(): void {
     localStorage.removeItem("user_data");
     navigate("/");
   }
@@ -18,12 +18,12 @@ function NavBar() {
   // If there is no user logged in, returns empty string
   // If a user is logged in, returns their name (First + Last).
   function getUserName(): string {
-    const userData = localStorage.getItem("user_data");
+    const userData: string | null = localStorage.getItem("user_data");
     if (userData == null) {
       return "";
     }
     const userDataObject = JSON.parse(userData);
-    return userDataObject.firstName + " " + userDataObject.lastName;
+    return userDataObject["firstName"] + " " + userDataObject["lastName"];
   }
 
   function getRemainingNavBarContent() {

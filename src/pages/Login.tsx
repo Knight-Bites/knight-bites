@@ -19,8 +19,8 @@ interface FormValues {
 type Field = "email" | "password";
 
 function Login() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showAlert, setShowAlert] = useState<boolean>(false);
   const [formValues, setFormValues] = useState<FormValues>({
     email: "",
     password: "",
@@ -35,7 +35,7 @@ function Login() {
 
   const navigate = useNavigate();
 
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const togglePasswordVisibility = (): void => setShowPassword(!showPassword);
 
   const handleBlur = (field: Field) =>
     setTouched({ ...touched, [field]: true });
@@ -47,38 +47,48 @@ function Login() {
   };
 
   async function doLogin(email: string, password: string): Promise<void> {
-    let requestObject = { email: email, password: password };
-    let request = JSON.stringify(requestObject);
+    const requestObject: object = { email: email, password: password };
+    const request: string = JSON.stringify(requestObject);
 
     try {
-      const response = await fetch("http://knightbites.xyz:5000/api/login", {
-        method: "POST",
-        body: request,
-        headers: { "Content-Type": "application/json" },
-      });
+      // Send the request
+      const response: Response = await fetch(
+        "http://knightbites.xyz:5000/api/login",
+        {
+          method: "POST",
+          body: request,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      let responseObject = JSON.parse(await response.text());
+      // Parse the response
+      const responseObject = JSON.parse(await response.text());
 
-      if (responseObject.id <= 0) {
+      // User doesn't exist
+      if (responseObject["id"] <= 0) {
         setShowAlert(true);
         return;
+        // User exists
       } else {
-        let user = {
-          id: responseObject.id,
-          firstName: responseObject.firstName,
-          lastName: responseObject.lastName,
+        // Save the user's info to local storage
+        const user: object = {
+          id: responseObject["id"],
+          firstName: responseObject["firstName"],
+          lastName: responseObject["lastName"],
           email: email,
         };
         localStorage.setItem("user_data", JSON.stringify(user));
         setShowAlert(false);
+        // Redirect to dashboard
         navigate("/dashboard");
         return;
       }
-    } catch (error: any) {
-      alert(error.toString());
+    } catch (error) {
+      alert(error);
       return;
     }
   }
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -97,7 +107,7 @@ function Login() {
       <NavBar />
       <Container className="my-5">
         <h1 className="my-3">Log In</h1>
-        <Col md="4">
+        <Col sm={8} md={6} lg={5} xl={4}>
           {showAlert && (
             <Alert
               variant="danger"
@@ -110,7 +120,14 @@ function Login() {
         </Col>
         <Form noValidate onSubmit={handleSubmit}>
           <Row className="mb-3 my-3">
-            <Form.Group as={Col} md="4" controlId="validationEmail">
+            <Form.Group
+              as={Col}
+              sm={8}
+              md={6}
+              lg={5}
+              xl={4}
+              controlId="validationEmail"
+            >
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="text"
@@ -130,7 +147,14 @@ function Login() {
             </Form.Group>
           </Row>
           <Row className="mb-3">
-            <Form.Group as={Col} md="4" controlId="validationPassword">
+            <Form.Group
+              as={Col}
+              sm={8}
+              md={6}
+              lg={5}
+              xl={4}
+              controlId="validationPassword"
+            >
               <Form.Label>Password</Form.Label>
               <InputGroup hasValidation>
                 <Form.Control

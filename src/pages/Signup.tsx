@@ -11,15 +11,15 @@ import NavBar from "../components/NavBar";
 import Container from "react-bootstrap/Container";
 
 function Signup() {
-  const [validated, setValidated] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginExists, setLoginExists] = useState(false);
-  const [signupSuccess, setSignupSuccess] = useState(false);
-  const [secondsUntilRedirect, setSecondsUntilRedirect] = useState(3);
+  const [validated, setValidated] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loginExists, setLoginExists] = useState<boolean>(false);
+  const [signupSuccess, setSignupSuccess] = useState<boolean>(false);
+  const [secondsUntilRedirect, setSecondsUntilRedirect] = useState<number>(3);
 
   const navigate = useNavigate();
 
-  const togglePasswordVisibility = () => {
+  const togglePasswordVisibility = (): void => {
     setShowPassword(!showPassword);
   };
 
@@ -34,45 +34,51 @@ function Signup() {
     email: string,
     password: string
   ): Promise<void> {
-    let requestObject = {
+    const requestObject: object = {
       firstName: firstName,
       lastName: lastName,
       email: email,
       password: password,
     };
-    let request = JSON.stringify(requestObject);
+    const request: string = JSON.stringify(requestObject);
 
     try {
-      const response = await fetch("http://knightbites.xyz:5000/api/register", {
-        method: "POST",
-        body: request,
-        headers: { "Content-Type": "application/json" },
-      });
+      // Send the request
+      const response: Response = await fetch(
+        "http://knightbites.xyz:5000/api/register",
+        {
+          method: "POST",
+          body: request,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      let responseObject = JSON.parse(await response.text());
+      // Parse the response
+      const responseObject = JSON.parse(await response.text());
 
-      if (responseObject.error !== "") {
-        // do something to handle error here
-        // show alert
-      } else if (responseObject.success === "User registered successfully") {
+      // Some error was returned
+      if (responseObject["error"] !== "") {
+        alert("error: " + responseObject["error"]);
+        // Successful signup
+      } else if (responseObject["success"] !== "") {
         setSignupSuccess(true);
-        await sleep(1);
-        setSecondsUntilRedirect(2);
-        await sleep(1);
-        setSecondsUntilRedirect(1);
-        await sleep(1);
-        setSecondsUntilRedirect(0);
 
+        // Count down 3,2,1,0 until redirect to login
+        for (let i: number = 2; i >= 0; i--) {
+          await sleep(i);
+          setSecondsUntilRedirect(i);
+        }
         navigate("/login");
+        return;
       }
-    } catch (error: any) {
-      alert(error.toString());
+    } catch (error) {
+      alert(error);
       return;
     }
   }
 
-  const handleSubmit = (event: any) => {
-    const form = event.currentTarget;
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const form: EventTarget & HTMLFormElement = event.currentTarget;
     event.preventDefault();
 
     if (form.checkValidity() === false) {
@@ -81,10 +87,10 @@ function Signup() {
       return;
     }
 
-    const firstName: string = form.validationFirstName.value.trim();
-    const lastName: string = form.validationLastName.value.trim();
-    const email: string = form.validationEmail.value.trim();
-    const password: string = form.validationPassword.value.trim();
+    const firstName: string = form["validationFirstName"].value.trim();
+    const lastName: string = form["validationLastName"].value.trim();
+    const email: string = form["validationEmail"].value.trim();
+    const password: string = form["validationPassword"].value.trim();
 
     doSignup(firstName, lastName, email, password);
     setValidated(true);
@@ -95,7 +101,7 @@ function Signup() {
       <NavBar />
       <Container className="my-5">
         <h1 className="my-3">Sign Up</h1>
-        <Col md="4">
+        <Col sm={8} md={6} lg={5} xl={4}>
           {loginExists && (
             <Alert
               variant="danger"
@@ -107,14 +113,23 @@ function Signup() {
           )}
           {signupSuccess && (
             <Alert variant="success">
-              Signup success. Redirecting to login in
-              {secondsUntilRedirect} seconds...
+              <div>
+                Signup success. Redirecting to login in {secondsUntilRedirect}{" "}
+                seconds...
+              </div>
             </Alert>
           )}
         </Col>
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
           <Row className="mb-3">
-            <Form.Group as={Col} md="4" controlId="validationFirstName">
+            <Form.Group
+              as={Col}
+              sm={8}
+              md={6}
+              lg={5}
+              xl={4}
+              controlId="validationFirstName"
+            >
               <Form.Label>First name</Form.Label>
               <Form.Control
                 required
@@ -130,7 +145,14 @@ function Signup() {
           </Row>
 
           <Row className="mb-3">
-            <Form.Group as={Col} md="4" controlId="validationLastName">
+            <Form.Group
+              as={Col}
+              sm={8}
+              md={6}
+              lg={5}
+              xl={4}
+              controlId="validationLastName"
+            >
               <Form.Label>Last name</Form.Label>
               <Form.Control
                 required
@@ -146,7 +168,14 @@ function Signup() {
           </Row>
 
           <Row className="mb-3">
-            <Form.Group as={Col} md="4" controlId="validationEmail">
+            <Form.Group
+              as={Col}
+              sm={8}
+              md={6}
+              lg={5}
+              xl={4}
+              controlId="validationEmail"
+            >
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="text"
@@ -163,7 +192,14 @@ function Signup() {
           </Row>
 
           <Row className="mb-3">
-            <Form.Group as={Col} md="4" controlId="validationPassword">
+            <Form.Group
+              as={Col}
+              sm={8}
+              md={6}
+              lg={5}
+              xl={4}
+              controlId="validationPassword"
+            >
               <Form.Label>Password</Form.Label>
               <InputGroup hasValidation>
                 <Form.Control

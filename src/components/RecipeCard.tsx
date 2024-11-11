@@ -3,15 +3,51 @@ import Card from "react-bootstrap/Card";
 import ListGroup from "react-bootstrap/ListGroup";
 import RecipeType from "../utils/RecipeType";
 import Dropdown from "react-bootstrap/Dropdown";
+import DropdownButton from "react-bootstrap/DropdownButton";
+import { MdOutlineStar, MdOutlineStarBorder } from "react-icons/md";
+import Button from "react-bootstrap/Button";
 
 interface RecipeCardProps {
   recipe: RecipeType;
   userId: string;
   onDelete: (recipe: RecipeType) => void;
+  isFavorited: boolean;
+  favoriteOrUnfavorite: (
+    favorited: boolean,
+    recipeId: string
+  ) => Promise<boolean>;
 }
 
-function RecipeCard({ recipe, userId, onDelete }: RecipeCardProps) {
-  const getCardFooterContent = (recipeUserId: string) => {
+function RecipeCard({
+  recipe,
+  userId,
+  onDelete,
+  isFavorited,
+  favoriteOrUnfavorite,
+}: RecipeCardProps) {
+  const getAuthor = (): string => {
+    if (userId === recipe.userId) {
+      return "You";
+    }
+    return recipe.userId;
+  };
+  const getSeeMoreIngredients = (): JSX.Element => {
+    if (recipe.recipeIngredients.length > 3) {
+      return (
+        <DropdownButton
+          variant="link"
+          title="See more ingredients"
+          drop={"end"}
+        >
+          {recipe.recipeIngredients.slice(3).map((ingredient, index) => (
+            <Dropdown.ItemText key={index}>{ingredient}</Dropdown.ItemText>
+          ))}
+        </DropdownButton>
+      );
+    }
+    return <></>;
+  };
+  const getCardFooterContent = (recipeUserId: string): JSX.Element => {
     if (userId === recipeUserId) {
       return (
         <Dropdown>
@@ -32,7 +68,25 @@ function RecipeCard({ recipe, userId, onDelete }: RecipeCardProps) {
         </Dropdown>
       );
     } else {
-      return <Card.Link>Favorite</Card.Link>;
+      return (
+        <Button
+          variant="light"
+          className="bg-transparent border-0"
+          onClick={onFavoriteOrUnfavorite}
+        >
+          {isFavorited ? (
+            <MdOutlineStar size="25px" />
+          ) : (
+            <MdOutlineStarBorder size="25px" />
+          )}
+        </Button>
+      );
+    }
+  };
+
+  const onFavoriteOrUnfavorite = async () => {
+    if (await favoriteOrUnfavorite(isFavorited, recipe._id)) {
+      console.log("favorited successfully");
     }
   };
 
@@ -42,7 +96,7 @@ function RecipeCard({ recipe, userId, onDelete }: RecipeCardProps) {
         <Card.Img variant="top" src={recipe.imageEncoding} />
         <Card.Body>
           <Card.Title>{recipe.recipeName}</Card.Title>
-          <Card.Text>{"by " + recipe.userId}</Card.Text>
+          <Card.Text>{"by " + getAuthor()}</Card.Text>
         </Card.Body>
         <ListGroup className="list-group-flush">
           {/* Map over the first 3 ingredients */}
@@ -50,17 +104,14 @@ function RecipeCard({ recipe, userId, onDelete }: RecipeCardProps) {
             <ListGroup.Item key={index}>{ingredient}</ListGroup.Item>
           ))}
 
-          {/* Add missing ListGroup.Items if there are fewer than 3 ingredients
-                        {[...Array(3 - recipe.recipeIngredients.length)].map(
-                          (_, index) => (
-                            <ListGroup.Item
-                              key={`missing-${index}`}
-                            ></ListGroup.Item>
-                          )
-                        )} */}
+          {recipe.recipeIngredients.length < 3 &&
+            [...Array(3 - recipe.recipeIngredients.length)].map((_, index) => (
+              <ListGroup.Item key={`missing-${index}`}>&nbsp;</ListGroup.Item>
+            ))}
         </ListGroup>
-        <Card.Body className="p-1 text-end">
-          {getCardFooterContent(recipe.userId)}
+        <Card.Body className="d-flex p-1 justify-content-between">
+          <div className="me-auto">{getSeeMoreIngredients()}</div>
+          <div>{getCardFooterContent(recipe.userId)}</div>
         </Card.Body>
       </Card>
     </Col>
