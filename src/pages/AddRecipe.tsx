@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import getUserData from "../utils/getUserData";
 import ImageCropModal from "../components/ImageCropModal";
 import { Area } from "react-easy-crop";
+import Alert from "react-bootstrap/Alert";
 
 function AddRecipe() {
   const [validated, setValidated] = useState<boolean>(false);
@@ -27,6 +28,7 @@ function AddRecipe() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [imageURL, setImageURL] = useState<string | undefined>(undefined);
   const [croppedImageURL, setCroppedImageURL] = useState<string | null>(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -89,11 +91,14 @@ function AddRecipe() {
     }
     // If all parts of form are valid
     if (valid) {
+      event.preventDefault();
+      event.stopPropagation();
       // Submit the add recipe
       const title: string = (
         form.elements.namedItem("validationTitle") as HTMLInputElement
       ).value;
       doAddRecipe(title);
+      form.reset();
     }
   };
 
@@ -142,7 +147,9 @@ function AddRecipe() {
         {
           method: "POST",
           body: request,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
       console.log(response);
@@ -155,7 +162,16 @@ function AddRecipe() {
         return;
         // Successful add recipe
       } else {
-        alert("Recipe added successfully");
+        setShowSuccessAlert(true);
+        // Reset most states
+        setValidated(false);
+        setIngredient("");
+        setIngredientsList([]);
+        setHoveredIndex(null);
+        setIngredientsValid(true);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        setImageURL(undefined);
+        setCroppedImageURL(null);
         return;
       }
     } catch (error) {
@@ -183,6 +199,14 @@ function AddRecipe() {
           handleCropCancel={handleCropCancel}
           onCrop={onCrop}
         />
+        <Alert
+          variant="success"
+          dismissible
+          show={showSuccessAlert}
+          onClose={() => setShowSuccessAlert(false)}
+        >
+          Recipe added successfully!
+        </Alert>
         <Form
           id="titleImageForm"
           noValidate
