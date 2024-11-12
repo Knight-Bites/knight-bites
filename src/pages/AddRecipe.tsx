@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -26,12 +26,19 @@ function AddRecipe() {
   const [ingredientsValid, setIngredientsValid] = useState<boolean>(true);
   const [showCropModal, setShowCropModal] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
   const [imageURL, setImageURL] = useState<string | undefined>(undefined);
   const [croppedImageURL, setCroppedImageURL] = useState<string | null>(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const userData = getUserData();
+    if (Object.keys(userData).length === 0) {
+      navigate("/");
+    }
+  }, [navigate]);
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files && e.target.files.length > 0) {
       const selectedImage: File = e.target.files[0];
@@ -55,7 +62,7 @@ function AddRecipe() {
 
   const handleAddIngredient = (): void => {
     if (ingredient.trim()) {
-      setIngredientsList([ingredient.trim(), ...ingredientsList]);
+      setIngredientsList([...ingredientsList, ingredient.trim()]);
       setIngredient("");
       setIngredientsValid(true); // Reset validation if ingredient added
     }
@@ -98,7 +105,6 @@ function AddRecipe() {
         form.elements.namedItem("validationTitle") as HTMLInputElement
       ).value;
       doAddRecipe(title);
-      form.reset();
     }
   };
 
@@ -170,6 +176,7 @@ function AddRecipe() {
         setHoveredIndex(null);
         setIngredientsValid(true);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        if (titleInputRef.current) titleInputRef.current.value = "";
         setImageURL(undefined);
         setCroppedImageURL(null);
         return;
@@ -221,6 +228,7 @@ function AddRecipe() {
                 type="text"
                 placeholder="Chicken alfredo"
                 defaultValue=""
+                ref={titleInputRef}
               />
               <Form.Control.Feedback type="invalid">
                 No title entered

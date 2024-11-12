@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
@@ -10,6 +9,8 @@ import Alert from "react-bootstrap/Alert";
 import classNames from "classnames";
 import Container from "react-bootstrap/Container";
 import NavBar from "../components/NavBar";
+import doLogin from "../utils/doLogin";
+import { useNavigate } from "react-router-dom";
 
 interface FormValues {
   email: string;
@@ -46,50 +47,7 @@ function Login() {
     setFormValues({ ...formValues, [name]: value });
   };
 
-  async function doLogin(email: string, password: string): Promise<void> {
-    const requestObject: object = { email: email, password: password };
-    const request: string = JSON.stringify(requestObject);
-
-    try {
-      // Send the request
-      const response: Response = await fetch(
-        "http://knightbites.xyz:5000/api/login",
-        {
-          method: "POST",
-          body: request,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      // Parse the response
-      const responseObject = JSON.parse(await response.text());
-
-      // User doesn't exist
-      if (responseObject["id"] <= 0) {
-        setShowAlert(true);
-        return;
-        // User exists
-      } else {
-        // Save the user's info to local storage
-        const user: object = {
-          id: responseObject["id"],
-          firstName: responseObject["firstName"],
-          lastName: responseObject["lastName"],
-          email: email,
-        };
-        localStorage.setItem("user_data", JSON.stringify(user));
-        setShowAlert(false);
-        // Redirect to dashboard
-        navigate("/dashboard");
-        return;
-      }
-    } catch (error) {
-      alert(error);
-      return;
-    }
-  }
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const { email, password } = formValues;
@@ -98,8 +56,17 @@ function Login() {
       setTouched({ email: true, password: true });
       return;
     }
-
-    doLogin(email, password);
+    // Attempt to login
+    const loginSuccessful: boolean = await doLogin(
+      email.trim(),
+      password,
+      navigate
+    );
+    if (loginSuccessful) {
+      setShowAlert(false);
+    } else {
+      setShowAlert(true);
+    }
   };
 
   return (

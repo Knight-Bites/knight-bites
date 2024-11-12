@@ -150,7 +150,7 @@ function Dashboard() {
     const loadUserId = (): void => {
       const userData = getUserData();
       if (Object.keys(userData).length === 0 || userData["id"] === "") {
-        alert("error: no user logged in");
+        navigate("/");
         return;
       }
       setUserId(userData.id);
@@ -207,10 +207,54 @@ function Dashboard() {
   }
 
   // Called when a user confirms delete in the delete modal
-  function doDeleteRecipe(recipe: RecipeType): void {
-    alert("deleting recipe " + recipe.recipeName + "!");
-    setShowDeleteModal(false);
-    return;
+  async function doDeleteRecipe(recipeToDelete: RecipeType): Promise<void> {
+    //alert("deleting recipe " + recipe.recipeName + "!");
+    const requestObject: object = {
+      _id: recipeToDelete._id,
+      userId: recipeToDelete.userId,
+    };
+
+    const request: string = JSON.stringify(requestObject);
+    try {
+      // Send the request
+      const response: Response = await fetch(
+        "http://knightbites.xyz:5000/api/deleteRecipe",
+        {
+          method: "POST",
+          body: request,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(response);
+      // Parse the response
+      const responseObject = JSON.parse(await response.text());
+
+      // Some error was returned
+      if (responseObject["error"] !== "") {
+        alert(
+          "Could not delete recipe. Response error:" + responseObject["error"]
+        );
+        return;
+        // Successful delete recipe
+      } else {
+        setCurrentRecipes(
+          currentRecipes.filter((recipe) => recipe._id !== recipeToDelete._id)
+        );
+        setAllRecipes(
+          allRecipes.filter((recipe) => recipe._id !== recipeToDelete._id)
+        );
+        setMyRecipes(
+          myRecipes.filter((recipe) => recipe._id !== recipeToDelete._id)
+        );
+        setShowDeleteModal(false);
+        return;
+      }
+    } catch (error) {
+      alert("Exception in doDeleteRecipe: " + error);
+      return;
+    }
   }
 
   // Called when a user closes the delete modal and cancels the delete

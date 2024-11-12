@@ -15,18 +15,12 @@ function Signup() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginExists, setLoginExists] = useState<boolean>(false);
   const [signupSuccess, setSignupSuccess] = useState<boolean>(false);
-  const [secondsUntilRedirect, setSecondsUntilRedirect] = useState<number>(3);
 
   const navigate = useNavigate();
 
   const togglePasswordVisibility = (): void => {
     setShowPassword(!showPassword);
   };
-
-  function sleep(seconds: number): Promise<void> {
-    const ms: number = seconds * 1000;
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
 
   async function doSignup(
     firstName: string,
@@ -62,13 +56,8 @@ function Signup() {
         // Successful signup
       } else if (responseObject["success"] !== "") {
         setSignupSuccess(true);
-
-        // Count down 3,2,1,0 until redirect to login
-        for (let i: number = 2; i >= 0; i--) {
-          await sleep(i);
-          setSecondsUntilRedirect(i);
-        }
-        navigate("/login");
+        // Redirect to verify
+        navigate("/verify", { state: { email: email, password: password } });
         return;
       }
     } catch (error) {
@@ -102,23 +91,17 @@ function Signup() {
       <Container className="my-5">
         <h1 className="my-3">Sign Up</h1>
         <Col sm={8} md={6} lg={5} xl={4}>
-          {loginExists && (
-            <Alert
-              variant="danger"
-              dismissible
-              onClose={() => setLoginExists(false)}
-            >
-              Login already exists.
-            </Alert>
-          )}
-          {signupSuccess && (
-            <Alert variant="success">
-              <div>
-                Signup success. Redirecting to login in {secondsUntilRedirect}{" "}
-                seconds...
-              </div>
-            </Alert>
-          )}
+          <Alert
+            variant="danger"
+            show={loginExists}
+            dismissible
+            onClose={() => setLoginExists(false)}
+          >
+            Login already exists.
+          </Alert>
+          <Alert show={signupSuccess} variant="success">
+            <div>Signup success. Redirecting to verification...</div>
+          </Alert>
         </Col>
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
           <Row className="mb-3">
