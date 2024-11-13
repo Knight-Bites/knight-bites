@@ -14,7 +14,7 @@ interface RecipeCardProps {
   isFavorited: boolean;
   favoriteOrUnfavorite: (
     favorited: boolean,
-    recipeId: string
+    recipe: RecipeType
   ) => Promise<boolean>;
 }
 
@@ -85,7 +85,7 @@ function RecipeCard({
   };
 
   const onFavoriteOrUnfavorite = async () => {
-    if (await favoriteOrUnfavorite(isFavorited, recipe._id)) {
+    if (await favoriteOrUnfavorite(isFavorited, recipe)) {
       console.log("favorited successfully");
     }
   };

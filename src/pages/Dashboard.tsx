@@ -21,7 +21,7 @@ function Dashboard() {
   const [userId, setUserId] = useState<string>("");
   const [allRecipes, setAllRecipes] = useState<RecipeType[]>([]);
   const [currentRecipes, setCurrentRecipes] = useState<RecipeType[]>([]);
-  const [favoriteRecipeIds, setFavoriteRecipeIds] = useState<string[]>([]);
+  const [favoriteRecipes, setFavoriteRecipes] = useState<RecipeType[]>([]);
   const [myRecipes, setMyRecipes] = useState<RecipeType[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [recipeToDelete, setRecipeToDelete] = useState<RecipeType>(
@@ -114,7 +114,7 @@ function Dashboard() {
     }
   }
 
-  async function getFavoriteRecipeIds(): Promise<string[]> {
+  async function getFavoriteRecipes(): Promise<object[]> {
     if (userId === "") {
       alert("Cannot get favorite recipes because no user is logged in");
       return [];
@@ -135,7 +135,7 @@ function Dashboard() {
 
       // Parse the response
       const responseObject = JSON.parse(await response.text());
-      const results: string[] = responseObject["favorites"] || [];
+      const results: object[] = responseObject["favorites"] || [];
 
       // Return the results
       return results;
@@ -167,8 +167,8 @@ function Dashboard() {
         setCurrentRecipes(fetchedRecipes as RecipeType[]);
       };
       const fetchFavoriteRecipeIds = async () => {
-        const fetchedRecipeIds = await getFavoriteRecipeIds();
-        setFavoriteRecipeIds(fetchedRecipeIds);
+        const fetchedRecipes = await getFavoriteRecipes();
+        setFavoriteRecipes(fetchedRecipes as RecipeType[]);
       };
       const fetchMyRecipes = async () => {
         const fetchedRecipes = await getMyRecipes();
@@ -179,18 +179,18 @@ function Dashboard() {
       fetchMyRecipes();
       setIsLoading(false);
     }
-  }, [userId, getAllRecipes, getFavoriteRecipeIds, getMyRecipes]);
+  }, [userId, getAllRecipes, getFavoriteRecipes, getMyRecipes]);
 
   const updateRecipes = () => {
     const updatedAllRecipes = allRecipes.map((recipe) => {
-      if (favoriteRecipeIds.includes(recipe._id)) {
+      if (isRecipeInFavorites(recipe)) {
         return { ...recipe, favorite: true };
       } else {
         return { ...recipe, favorite: false };
       }
     });
     const updatedCurrentRecipes = currentRecipes.map((recipe) => {
-      if (favoriteRecipeIds.includes(recipe._id)) {
+      if (isRecipeInFavorites(recipe)) {
         return { ...recipe, favorite: true };
       } else {
         return { ...recipe, favorite: false };
@@ -263,7 +263,18 @@ function Dashboard() {
     setRecipeToDelete({} as RecipeType);
   }
 
-  async function favoriteOrUnfavorite(favorited: boolean, recipeId: string) {
+  function isRecipeInFavorites(recipeInQuestion: RecipeType): boolean {
+    for (const favoriteRecipe of favoriteRecipes) {
+      if (favoriteRecipe._id === recipeInQuestion._id) {
+        return true;
+      }
+    }
+    return false;
+  }
+  async function favoriteOrUnfavorite(
+    favorited: boolean,
+    recipeToFavorite: RecipeType
+  ) {
     let API_URL: string;
 
     if (favorited) {
@@ -272,7 +283,10 @@ function Dashboard() {
       API_URL = "http://knightbites.xyz:5000/api/favoritesAdd";
     }
 
-    const requestObject: object = { userId: userId, recipeId: recipeId };
+    const requestObject: object = {
+      userId: userId,
+      recipeId: recipeToFavorite._id,
+    };
     const request: string = JSON.stringify(requestObject);
 
     try {
@@ -290,16 +304,18 @@ function Dashboard() {
         // If currently favorited
         if (favorited) {
           // Need to unfavorite
-          setFavoriteRecipeIds(
-            favoriteRecipeIds.filter((id) => id !== recipeId)
+          setFavoriteRecipes(
+            favoriteRecipes.filter(
+              (recipe) => recipe._id !== recipeToFavorite._id
+            )
           );
         }
         // If currently unfavorited
         else {
           // Need to favorite
-          setFavoriteRecipeIds((favoriteRecipeIds) => [
-            ...favoriteRecipeIds,
-            recipeId,
+          setFavoriteRecipes((favoriteRecipes) => [
+            ...favoriteRecipes,
+            recipeToFavorite,
           ]);
           updateRecipes();
         }
@@ -376,7 +392,7 @@ function Dashboard() {
                     recipe={recipe}
                     userId={userId}
                     onDelete={handleInitiateDelete}
-                    isFavorited={favoriteRecipeIds.includes(recipe._id)}
+                    isFavorited={isRecipeInFavorites(recipe)}
                     favoriteOrUnfavorite={favoriteOrUnfavorite}
                   />
                 ))}
@@ -384,19 +400,16 @@ function Dashboard() {
             </Tab.Pane>
             <Tab.Pane eventKey="favorites">
               <Row xs={1} md={2} lg={3} className="g-4">
-                {allRecipes.map(
-                  (recipe) =>
-                    favoriteRecipeIds.includes(recipe._id) && (
-                      <RecipeCard
-                        key={recipe._id}
-                        recipe={recipe}
-                        userId={userId}
-                        onDelete={handleInitiateDelete}
-                        isFavorited={favoriteRecipeIds.includes(recipe._id)}
-                        favoriteOrUnfavorite={favoriteOrUnfavorite}
-                      />
-                    )
-                )}
+                {favoriteRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe._id}
+                    recipe={recipe}
+                    userId={userId}
+                    onDelete={handleInitiateDelete}
+                    isFavorited={isRecipeInFavorites(recipe)}
+                    favoriteOrUnfavorite={favoriteOrUnfavorite}
+                  />
+                ))}
               </Row>
             </Tab.Pane>
             <Tab.Pane eventKey="my-recipes">
@@ -407,7 +420,7 @@ function Dashboard() {
                     recipe={recipe}
                     userId={userId}
                     onDelete={handleInitiateDelete}
-                    isFavorited={favoriteRecipeIds.includes(recipe._id)}
+                    isFavorited={isRecipeInFavorites(recipe)}
                     favoriteOrUnfavorite={favoriteOrUnfavorite}
                   />
                 ))}
