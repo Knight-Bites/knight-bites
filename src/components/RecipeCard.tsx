@@ -18,7 +18,7 @@ interface RecipeCardProps {
   favoriteOrUnfavorite: (
     favorited: boolean,
     recipe: RecipeType
-  ) => Promise<boolean>;
+  ) => Promise<void>;
 }
 
 function RecipeCard({
@@ -28,13 +28,13 @@ function RecipeCard({
   isFavorited,
   favoriteOrUnfavorite,
 }: RecipeCardProps) {
-  const getAuthor = (): string => {
+  function getAuthor(): string {
     if (userId === recipe.userId) {
       return "You";
     }
     return recipe.fullName;
-  };
-  const getSeeMoreIngredients = (): JSX.Element => {
+  }
+  function getSeeMoreIngredients(): JSX.Element {
     if (recipe.recipeIngredients.length > 3) {
       return (
         <DropdownButton
@@ -49,8 +49,8 @@ function RecipeCard({
       );
     }
     return <></>;
-  };
-  const getCardFooterContent = (): JSX.Element => {
+  }
+  function getCardFooterContent(): JSX.Element {
     if (userId === recipe.userId) {
       return (
         <OverlayTrigger overlay={<Tooltip>Delete Recipe</Tooltip>}>
@@ -86,13 +86,11 @@ function RecipeCard({
         </OverlayTrigger>
       );
     }
-  };
+  }
 
-  const onFavoriteOrUnfavorite = async () => {
-    if (await favoriteOrUnfavorite(isFavorited, recipe)) {
-      console.log("favorited successfully");
-    }
-  };
+  async function onFavoriteOrUnfavorite(): Promise<void> {
+    await favoriteOrUnfavorite(isFavorited, recipe);
+  }
 
   return (
     <Col key={recipe._id} className="d-flex justify-content-center">

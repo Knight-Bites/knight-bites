@@ -13,21 +13,22 @@ import Container from "react-bootstrap/Container";
 function Signup() {
   const [validated, setValidated] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [loginExists, setLoginExists] = useState<boolean>(false);
-  const [signupSuccess, setSignupSuccess] = useState<boolean>(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
+  const [dangerAlertText, setDangerAlertText] = useState<string>("");
+  const [showDangerAlert, setShowDangerAlert] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
-  const togglePasswordVisibility = (): void => {
+  function togglePasswordVisibility(): void {
     setShowPassword(!showPassword);
-  };
+  }
 
   async function doSignup(
     firstName: string,
     lastName: string,
     email: string,
     password: string
-  ): Promise<void> {
+  ): Promise<string> {
     const requestObject: object = {
       firstName: firstName,
       lastName: lastName,
@@ -50,23 +51,25 @@ function Signup() {
       // Parse the response
       const responseObject = JSON.parse(await response.text());
 
-      // Some error was returned
-      if (responseObject["error"] !== "") {
-        alert("error: " + responseObject["error"]);
+      // Some error was returned from API
+      if ("error" in responseObject && responseObject["error"] !== "") {
+        return "Error returned from register API: " + responseObject["error"];
         // Successful signup
       } else if (responseObject["success"] !== "") {
-        setSignupSuccess(true);
-        // Redirect to verify
-        navigate("/verify", { state: { email: email, password: password } });
-        return;
+        return "";
+        // Other
+      } else {
+        return "Error: could not parse register API response.";
       }
+      // Exception
     } catch (error) {
-      alert(error);
-      return;
+      return "Exception occured while signing up: " + error;
     }
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
     const form: EventTarget & HTMLFormElement = event.currentTarget;
     event.preventDefault();
 
@@ -76,14 +79,28 @@ function Signup() {
       return;
     }
 
+    setValidated(true);
+
     const firstName: string = form["validationFirstName"].value.trim();
     const lastName: string = form["validationLastName"].value.trim();
     const email: string = form["validationEmail"].value.trim();
     const password: string = form["validationPassword"].value.trim();
 
-    doSignup(firstName, lastName, email, password);
-    setValidated(true);
-  };
+    const signupError: string = await doSignup(
+      firstName,
+      lastName,
+      email,
+      password
+    );
+
+    if (signupError !== "") {
+      setDangerAlertText(signupError);
+      setShowDangerAlert(true);
+      return;
+    }
+    setShowSuccessAlert(true);
+    navigate("/verify", { state: { email: email, password: password } });
+  }
 
   return (
     <>
@@ -93,14 +110,17 @@ function Signup() {
         <Col sm={8} md={6} lg={5} xl={4}>
           <Alert
             variant="danger"
-            show={loginExists}
+            show={showDangerAlert}
             dismissible
-            onClose={() => setLoginExists(false)}
+            onClose={() => {
+              setShowDangerAlert(false);
+              setDangerAlertText("");
+            }}
           >
-            Login already exists.
+            {dangerAlertText}
           </Alert>
-          <Alert show={signupSuccess} variant="success">
-            <div>Signup success. Redirecting to verification...</div>
+          <Alert show={showSuccessAlert} variant="success">
+            Signup success. Redirecting to verification...
           </Alert>
         </Col>
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -219,7 +239,7 @@ function Signup() {
           <div className="p-1 d-flex align-items-center">
             <p className="m-0">Already have an account?</p>
             <Button variant="link" onClick={() => navigate("/login")}>
-              Log in
+              Log In
             </Button>
           </div>
         </Form>

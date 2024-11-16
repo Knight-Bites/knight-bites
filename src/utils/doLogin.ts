@@ -18,6 +18,7 @@ async function doLogin(email: string, password: string, navigate: any): Promise<
 
       // User exists but is not verified
       if (
+        "error" in responseObject &&
         responseObject["error"] ===
         "Please verify your email before logging in."
       ) {
@@ -26,7 +27,7 @@ async function doLogin(email: string, password: string, navigate: any): Promise<
         return true;
       }
       // User doesn't exist
-      else if (responseObject["id"] <= 0) {
+      else if ("id" in responseObject && responseObject["id"] <= 0) {
         return false;
         // User exists
       } else {
@@ -44,7 +45,7 @@ async function doLogin(email: string, password: string, navigate: any): Promise<
         return true;
       }
     } catch (error) {
-      alert(error);
+      alert("Exception occured while logging in: " + error);
       return false;
     }
 }

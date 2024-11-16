@@ -25,11 +25,11 @@ function ResetPassword() {
 
   const navigate = useNavigate();
 
-  const togglePasswordVisibility = (): void => {
+  function togglePasswordVisibility(): void {
     setShowPassword(!showPassword);
-  };
+  }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     const form: EventTarget & HTMLFormElement = event.currentTarget;
     event.preventDefault();
 
@@ -76,7 +76,7 @@ function ResetPassword() {
     } catch (error) {
       alert(error);
     }
-  };
+  }
   return (
     <>
       <NavBar />

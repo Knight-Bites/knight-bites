@@ -36,18 +36,23 @@ function Login() {
 
   const navigate = useNavigate();
 
-  const togglePasswordVisibility = (): void => setShowPassword(!showPassword);
+  function togglePasswordVisibility(): void {
+    setShowPassword(!showPassword);
+  }
 
-  const handleBlur = (field: Field) =>
+  function handleBlur(field: Field): void {
     setTouched({ ...touched, [field]: true });
+  }
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>): void {
     const { name, value } = event.target;
     setShowAlert(false); // Clear alert on new input
     setFormValues({ ...formValues, [name]: value });
-  };
+  }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
     event.preventDefault();
 
     const { email, password } = formValues;
@@ -67,7 +72,7 @@ function Login() {
     } else {
       setShowAlert(true);
     }
-  };
+  }
 
   return (
     <>

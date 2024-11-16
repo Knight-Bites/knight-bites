@@ -23,11 +23,14 @@ function Verify() {
   const password: string = data["password"] || "";
   const navigate = useNavigate();
   const [validated, setValidated] = useState<boolean>(false);
-  const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [dangerAlertText, setDangerAlertText] = useState<string>("");
+  const [showDangerAlert, setShowDangerAlert] = useState<boolean>(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    setShowAlert(false);
+    setShowDangerAlert(false);
+    setDangerAlertText("");
+
     const form: EventTarget & HTMLFormElement = event.currentTarget;
     event.preventDefault();
 
@@ -40,24 +43,29 @@ function Verify() {
 
     const code: string = form["validationCode"].value.trim();
 
-    const codeIsCorrect: boolean = await doVerification(code);
-
-    if (!codeIsCorrect) {
-      setShowAlert(true);
+    // Verify the code
+    const codeVerificationError: string = await doVerification(code);
+    if (codeVerificationError !== "") {
+      setDangerAlertText(codeVerificationError);
+      setShowDangerAlert(true);
       return;
     }
+
+    // If code is correct, log the user in
     const loginSuccessful: boolean = await doLogin(email, password, navigate);
     if (loginSuccessful) {
-      setShowAlert(false);
+      setShowDangerAlert(false);
+      setDangerAlertText("");
       setShowSuccessAlert(true);
       return;
     } else {
-      alert("Error: Could not login for some reason");
+      setDangerAlertText("Error: Unable to log you in.");
+      setShowDangerAlert(true);
       return;
     }
   }
 
-  async function doVerification(code: string): Promise<boolean> {
+  async function doVerification(code: string): Promise<string> {
     const requestObject: object = {
       email: email,
       verificationCode: code,
@@ -80,16 +88,24 @@ function Verify() {
       // Parse the response
       const responseObject = JSON.parse(await response.text());
 
-      // Some error was returned
+      // Some error was returned from API
       if ("error" in responseObject && responseObject["error"] !== "") {
-        return false;
+        return (
+          "Error returned from verify-email API: " + responseObject["error"]
+        );
         // Successful verification
+      } else if (
+        "success" in responseObject &&
+        responseObject["success"] !== ""
+      ) {
+        return "";
+        // Other
       } else {
-        return true;
+        return "Error: could not parse verify-email API response.";
       }
+      // Exception
     } catch (error) {
-      alert("Exception in handleSubmit(): " + error);
-      return false;
+      return "Exception occurred while verifying the code: " + error;
     }
   }
 
@@ -113,16 +129,19 @@ function Verify() {
             </p>
             <Alert
               variant="danger"
-              show={showAlert}
+              show={showDangerAlert}
               dismissible
-              onClose={() => setShowAlert(false)}
+              onClose={() => {
+                setShowDangerAlert(false);
+                setDangerAlertText("");
+              }}
             >
-              Incorrect code.
+              {dangerAlertText}
             </Alert>
             <Alert variant="success" show={showSuccessAlert}>
               Verification successful. Redirecting to dashboard...
             </Alert>
-            {/* Form */}
+
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
               <Form.Group controlId="validationCode" className="mb-3">
                 <Form.Label className="text-start w-100">Code</Form.Label>

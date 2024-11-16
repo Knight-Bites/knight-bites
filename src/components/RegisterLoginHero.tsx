@@ -13,7 +13,7 @@ function RegisterLoginHero() {
           <h1 className="display-4 fw-bold lh-1">
             Your one-stop shop for saving and sharing recipes.
           </h1>
-          <p className="lead">New to Knight-Bites? Register to get started!</p>
+          <p className="lead">New to Knight-Bites? Sign up to get started!</p>
           <div className="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3">
             <Button
               variant="primary"
@@ -21,7 +21,7 @@ function RegisterLoginHero() {
               className="px-4 me-md-2 fw-bold"
               href="/signup"
             >
-              Register
+              Sign Up
             </Button>
             <Button
               variant="outline-primary"
@@ -29,7 +29,7 @@ function RegisterLoginHero() {
               className="px-4"
               href="/login"
             >
-              Login
+              Log In
             </Button>
           </div>
         </Col>

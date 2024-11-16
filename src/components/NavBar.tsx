@@ -6,10 +6,12 @@ import Navbar from "react-bootstrap/Navbar";
 import Button from "react-bootstrap/Button";
 import logo from "../assets/knightbites-logo.png";
 import Image from "react-bootstrap/Image";
+import getUserData from "../utils/getUserData";
 
 function NavBar() {
   const navigate = useNavigate();
 
+  // Log out by deleting the user's data from local storage then navigating to home page
   function doLogout(): void {
     localStorage.removeItem("user_data");
     navigate("/");
@@ -18,14 +20,15 @@ function NavBar() {
   // If there is no user logged in, returns empty string
   // If a user is logged in, returns their name (First + Last).
   function getUserName(): string {
-    const userData: string | null = localStorage.getItem("user_data");
-    if (userData == null) {
+    const userData = getUserData();
+    if (Object.keys(userData).length === 0) {
       return "";
     }
-    const userDataObject = JSON.parse(userData);
-    return userDataObject["firstName"] + " " + userDataObject["lastName"];
+    return userData["firstName"] + " " + userData["lastName"];
   }
 
+  // If a user is logged in, returns a Dropdown with their name and options for Dashboard and Logout.
+  // If no user is logged in, returns Register and Login buttons.
   function getRemainingNavBarContent() {
     const name: string = getUserName();
 
@@ -33,10 +36,10 @@ function NavBar() {
       return (
         <>
           <Button variant="primary" className="ms-1 me-1" href="/signup">
-            Register
+            Sign Up
           </Button>
           <Button variant="outline-primary" className="ms-1" href="/login">
-            Login
+            Log In
           </Button>
         </>
       );

@@ -7,26 +7,18 @@ import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Image from "react-bootstrap/Image";
+import Alert from "react-bootstrap/Alert";
 import logo from "../assets/knightbites-logo.png";
 
 function ForgotPassword() {
   const [validated, setValidated] = useState<boolean>(false);
+  const [dangerAlertText, setDangerAlertText] = useState<string>("");
+  const [showDangerAlert, setShowDangerAlert] = useState<boolean>(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    const form: EventTarget & HTMLFormElement = event.currentTarget;
-    event.preventDefault();
-
-    if (form.checkValidity() === false) {
-      event.stopPropagation();
-      setValidated(true);
-      return;
-    }
-    setValidated(true);
-
-    const email: string = form["validationEmail"].value.trim();
-
+  async function sendCode(email: string): Promise<string> {
     const requestObject: object = {
       email: email,
     };
@@ -46,19 +38,53 @@ function ForgotPassword() {
       // Parse the response
       const responseObject = JSON.parse(await response.text());
 
-      // Some error was returned
+      // Some error was returned from API
       if ("error" in responseObject && responseObject["error"] !== "") {
-        alert("error: " + responseObject["error"]);
-        return;
-        // Successful signup
-      } else if (responseObject["success"] !== "") {
-        navigate("/resetpassword", { state: { email: email } });
-        return;
+        return (
+          "Error returned from forgot-password API: " + responseObject["error"]
+        );
+        // Successful code send
+      } else if (
+        "success" in responseObject &&
+        responseObject["success"] !== ""
+      ) {
+        return "";
       }
+      // Other
+      else {
+        return "Error: could not parse forgot-password API response.";
+      }
+      // Exception
     } catch (error) {
-      alert(error);
+      return "Exception occured while sending the code: " + error;
     }
-  };
+  }
+
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
+    const form: EventTarget & HTMLFormElement = event.currentTarget;
+    event.preventDefault();
+
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      setValidated(true);
+      return;
+    }
+    setValidated(true);
+
+    const email: string = form["validationEmail"].value.trim();
+
+    const codeSendError: string = await sendCode(email);
+
+    if (codeSendError !== "") {
+      setDangerAlertText(codeSendError);
+      setShowDangerAlert(true);
+      return;
+    }
+    setShowSuccessAlert(true);
+    navigate("/resetpassword", { state: { email: email } });
+  }
   return (
     <>
       <NavBar />
@@ -79,8 +105,22 @@ function ForgotPassword() {
               Not to worry, we'll send you an email with a code to help reset
               your password.
             </p>
+            <Alert
+              variant="danger"
+              show={showDangerAlert}
+              dismissible
+              onClose={() => {
+                setShowDangerAlert(false);
+                setDangerAlertText("");
+              }}
+            >
+              {dangerAlertText}
+            </Alert>
+            <Alert variant="success" show={showSuccessAlert}>
+              A code has been sent to your email. Redirecting you to enter that
+              code...
+            </Alert>
 
-            {/* Form */}
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
               <Form.Group controlId="validationEmail" className="mb-3">
                 <Form.Label className="text-start w-100">

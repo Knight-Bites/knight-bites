@@ -52,10 +52,9 @@ function Dashboard() {
       const responseObject = JSON.parse(await response.text());
 
       // Return the results
-      const results: object[] = responseObject["results"];
-      return results;
+      return responseObject["results"] || [];
     } catch (error) {
-      alert(error);
+      alert("Exception occured while searching recipes: " + error);
       return [];
     }
   }
@@ -84,6 +83,7 @@ function Dashboard() {
   }
 
   async function getMyRecipes(): Promise<object[]> {
+    // This shouldn't happen but just check to make sure
     if (userId === "") {
       alert("Cannot get my recipes because no user is logged in");
       return [];
@@ -104,17 +104,17 @@ function Dashboard() {
 
       // Parse the response
       const responseObject = JSON.parse(await response.text());
-      const results: object[] = responseObject["recipes"] || [];
 
       // Return the results
-      return results;
+      return responseObject["recipes"] || [];
     } catch (error) {
-      alert(error);
+      alert("Exception occured while getting My Recipes: " + error);
       return [];
     }
   }
 
   async function getFavoriteRecipes(): Promise<object[]> {
+    // This shouldn't happen but just check to make sure
     if (userId === "") {
       alert("Cannot get favorite recipes because no user is logged in");
       return [];
@@ -135,12 +135,11 @@ function Dashboard() {
 
       // Parse the response
       const responseObject = JSON.parse(await response.text());
-      const results: object[] = responseObject["favorites"] || [];
 
       // Return the results
-      return results;
+      return responseObject["favorites"] || [];
     } catch (error) {
-      alert(error);
+      alert("Exception occured while getting favorite recipes: " + error);
       return [];
     }
   }
@@ -149,7 +148,8 @@ function Dashboard() {
   useEffect(() => {
     const loadUserId = (): void => {
       const userData = getUserData();
-      if (Object.keys(userData).length === 0 || userData["id"] === "") {
+      // If no user is logged in, redirect to homepage.
+      if (Object.keys(userData).length === 0) {
         navigate("/");
         return;
       }
@@ -181,24 +181,24 @@ function Dashboard() {
     }
   }, [userId, getAllRecipes, getFavoriteRecipes, getMyRecipes]);
 
-  const updateRecipes = () => {
+  function setFavoriteForRecipe(recipe: RecipeType): RecipeType {
+    if (isRecipeInFavorites(recipe)) {
+      return { ...recipe, favorite: true };
+    } else {
+      return { ...recipe, favorite: false };
+    }
+  }
+
+  function updateRecipes(): void {
     const updatedAllRecipes = allRecipes.map((recipe) => {
-      if (isRecipeInFavorites(recipe)) {
-        return { ...recipe, favorite: true };
-      } else {
-        return { ...recipe, favorite: false };
-      }
+      return setFavoriteForRecipe(recipe);
     });
     const updatedCurrentRecipes = currentRecipes.map((recipe) => {
-      if (isRecipeInFavorites(recipe)) {
-        return { ...recipe, favorite: true };
-      } else {
-        return { ...recipe, favorite: false };
-      }
+      return setFavoriteForRecipe(recipe);
     });
     setAllRecipes(updatedAllRecipes);
     setCurrentRecipes(updatedCurrentRecipes);
-  };
+  }
 
   // Called when a user presses "Delete" in the kebab menu
   function handleInitiateDelete(recipe: RecipeType): void {
@@ -208,7 +208,6 @@ function Dashboard() {
 
   // Called when a user confirms delete in the delete modal
   async function doDeleteRecipe(recipeToDelete: RecipeType): Promise<void> {
-    //alert("deleting recipe " + recipe.recipeName + "!");
     const requestObject: object = {
       _id: recipeToDelete._id,
       userId: recipeToDelete.userId,
@@ -227,14 +226,13 @@ function Dashboard() {
           },
         }
       );
-      console.log(response);
       // Parse the response
       const responseObject = JSON.parse(await response.text());
 
       // Some error was returned
-      if (responseObject["error"] !== "") {
+      if ("error" in responseObject && responseObject["error"] !== "") {
         alert(
-          "Could not delete recipe. Response error:" + responseObject["error"]
+          "Error returned from deleteRecipe API: " + responseObject["error"]
         );
         return;
         // Successful delete recipe
@@ -252,7 +250,7 @@ function Dashboard() {
         return;
       }
     } catch (error) {
-      alert("Exception in doDeleteRecipe: " + error);
+      alert("Exception occurred while deleting the recipe: " + error);
       return;
     }
   }
@@ -271,17 +269,18 @@ function Dashboard() {
     }
     return false;
   }
+
   async function favoriteOrUnfavorite(
     favorited: boolean,
     recipeToFavorite: RecipeType
-  ) {
-    let API_URL: string;
-
+  ): Promise<void> {
+    let endpoint: string;
     if (favorited) {
-      API_URL = "http://knightbites.xyz:5000/api/favoritesDelete";
+      endpoint = "favoritesDelete";
     } else {
-      API_URL = "http://knightbites.xyz:5000/api/favoritesAdd";
+      endpoint = "favoritesAdd";
     }
+    const API_URL: string = "http://knightbites.xyz:5000/api/" + endpoint;
 
     const requestObject: object = {
       userId: userId,
@@ -300,7 +299,7 @@ function Dashboard() {
       // Parse the response
       const responseObject = JSON.parse(await response.text());
 
-      if (responseObject["success"] !== "") {
+      if ("success" in responseObject && responseObject["success"] !== "") {
         // If currently favorited
         if (favorited) {
           // Need to unfavorite
@@ -317,15 +316,30 @@ function Dashboard() {
             ...favoriteRecipes,
             recipeToFavorite,
           ]);
-          updateRecipes();
         }
-        return true;
+        updateRecipes();
+        return;
+        // Some error was returned from API
+      } else if ("error" in responseObject && responseObject["error"] !== "") {
+        const verb: string = favorited ? "unfavorite" : "favorite";
+        alert(
+          "Could not " +
+            verb +
+            ". Error returned from " +
+            endpoint +
+            ": " +
+            responseObject["error"]
+        );
+        return;
+        // Other
       } else {
-        return false;
+        alert("Error: could not parse " + endpoint + " API response.");
+        return;
       }
+      // Exception
     } catch (error) {
-      alert(error);
-      return false;
+      alert("Exception occurred while modifying favorites: " + error);
+      return;
     }
   }
   return (

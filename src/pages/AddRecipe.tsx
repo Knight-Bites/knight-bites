@@ -30,51 +30,55 @@ function AddRecipe() {
   const [imageURL, setImageURL] = useState<string | undefined>(undefined);
   const [croppedImageURL, setCroppedImageURL] = useState<string | null>(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
+  const [dangerAlertText, setDangerAlertText] = useState<string>("");
+  const [showDangerAlert, setShowDangerAlert] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
+  // If a user tries to visit this page and is not logged in, redirect them to home page
   useEffect(() => {
     const userData = getUserData();
     if (Object.keys(userData).length === 0) {
       navigate("/");
     }
   }, [navigate]);
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>): void {
     if (e.target.files && e.target.files.length > 0) {
       const selectedImage: File = e.target.files[0];
       setImageURL(URL.createObjectURL(selectedImage));
       setShowCropModal(true);
     }
-  };
+  }
 
   // Called when a user chooses to close the crop modal and cancels the crop and image upload
-  const handleCropCancel = (): void => {
+  function handleCropCancel(): void {
     setShowCropModal(false);
     removeFile();
-  };
+  }
 
-  const removeFile = (): void => {
+  function removeFile(): void {
     setImageURL(undefined);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
+  }
 
-  const handleAddIngredient = (): void => {
+  function handleAddIngredient(): void {
     if (ingredient.trim()) {
       setIngredientsList([...ingredientsList, ingredient.trim()]);
       setIngredient("");
       setIngredientsValid(true); // Reset validation if ingredient added
     }
-  };
+  }
 
-  const handleRemoveIngredient = (indexToRemove: number): void => {
+  function handleRemoveIngredient(indexToRemove: number): void {
     setIngredientsList(
       ingredientsList.filter((_, index) => index !== indexToRemove)
     );
-  };
+  }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     // form handles the Title and Image fields
     const form: EventTarget & HTMLFormElement = event.currentTarget;
 
@@ -106,37 +110,34 @@ function AddRecipe() {
       ).value;
       doAddRecipe(title);
     }
-  };
+  }
 
   // Called when the user presses Save Crop in the crop modal
-  const onCrop = async (croppedAreaPixels: Area) => {
+  async function onCrop(croppedAreaPixels: Area): Promise<void> {
     const croppedImageURL_: string = await getCroppedImg(
       imageURL || "default",
       croppedAreaPixels
     );
     setCroppedImageURL(croppedImageURL_);
     setShowCropModal(false);
-  };
+  }
 
   // Called when the user submits the Add Recipe form with valid input
   async function doAddRecipe(title: string): Promise<void> {
     // Get the user's ID
     const userData = getUserData();
+    // This error shouldnt happen but just check to make sure
     if (Object.keys(userData).length === 0) {
       alert("error: no user logged in");
       return;
     }
     const userId: string = userData["id"];
-    if (userId === "") {
-      alert("error: no user logged in");
-      return;
-    }
     const fullName: string = userData["firstName"] + " " + userData["lastName"];
-    console.log(croppedImageURL);
     // Get the encoding of the cropped image
     const imageEncoding: string = await getResizedImg(croppedImageURL || "");
     if (imageEncoding === "" || imageEncoding == null) {
-      alert('Major error with cropped image URL being ""');
+      setDangerAlertText("Error: cropped image URL is empty or null");
+      setShowDangerAlert(true);
       return;
     }
 
@@ -150,8 +151,6 @@ function AddRecipe() {
 
     const request: string = JSON.stringify(requestObject);
 
-    console.log(request);
-
     try {
       // Send the request
       const response: Response = await fetch(
@@ -164,16 +163,23 @@ function AddRecipe() {
           },
         }
       );
-      console.log(response);
       // Parse the response
       const responseObject = JSON.parse(await response.text());
 
-      // Some error was returned
-      if (responseObject["error"] !== "") {
-        alert("Response error:" + responseObject["error"]);
+      // Some error was returned from API
+      if ("error" in responseObject && responseObject["error"] !== "") {
+        setDangerAlertText(
+          "Error returned from addrecipe API: " + responseObject["error"]
+        );
+        setShowDangerAlert(true);
         return;
         // Successful add recipe
-      } else {
+      } else if (
+        "success" in responseObject &&
+        responseObject["success"] !== ""
+      ) {
+        setShowDangerAlert(false);
+        setDangerAlertText("");
         setShowSuccessAlert(true);
         // Reset most states
         setValidated(false);
@@ -186,9 +192,13 @@ function AddRecipe() {
         setImageURL(undefined);
         setCroppedImageURL(null);
         return;
+      } else {
+        setDangerAlertText("Error: could not parse addrecipe API response.");
+        setShowDangerAlert(true);
       }
     } catch (error) {
-      alert("Exception in doAddRecipe: " + error);
+      setDangerAlertText("Exception occurred while adding recipe: " + error);
+      setShowDangerAlert(true);
       return;
     }
   }
@@ -219,6 +229,17 @@ function AddRecipe() {
           onClose={() => setShowSuccessAlert(false)}
         >
           Recipe added successfully!
+        </Alert>
+        <Alert
+          variant="danger"
+          dismissible
+          show={showDangerAlert}
+          onClose={() => {
+            setShowDangerAlert(false);
+            setDangerAlertText("");
+          }}
+        >
+          {dangerAlertText}
         </Alert>
         <Form
           id="titleImageForm"
