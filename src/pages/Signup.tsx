@@ -23,6 +23,7 @@ function Signup() {
     setShowPassword(!showPassword);
   }
 
+  // Returns "" if the action was successful, otherwise, returns the error as a string.
   async function doSignup(
     firstName: string,
     lastName: string,
@@ -53,7 +54,7 @@ function Signup() {
 
       // Some error was returned from API
       if ("error" in responseObject && responseObject["error"] !== "") {
-        return "Error returned from register API: " + responseObject["error"];
+        return responseObject["error"];
         // Successful signup
       } else if (responseObject["success"] !== "") {
         return "";

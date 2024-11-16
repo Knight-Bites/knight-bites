@@ -10,6 +10,7 @@ import Image from "react-bootstrap/Image";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import logo from "../assets/knightbites-logo.png";
+import Alert from "react-bootstrap/Alert";
 
 function ResetPassword() {
   const location = useLocation();
@@ -22,6 +23,9 @@ function ResetPassword() {
 
   const [validated, setValidated] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false);
+  const [dangerAlertText, setDangerAlertText] = useState<string>("");
+  const [showDangerAlert, setShowDangerAlert] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -29,20 +33,11 @@ function ResetPassword() {
     setShowPassword(!showPassword);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    const form: EventTarget & HTMLFormElement = event.currentTarget;
-    event.preventDefault();
-
-    if (form.checkValidity() === false) {
-      event.stopPropagation();
-      setValidated(true);
-      return;
-    }
-    setValidated(true);
-
-    const code: string = form["validationCode"].value.trim();
-    const password: string = form["validationPassword"].value.trim();
-
+  // Returns "" if the action was successful, otherwise, returns the error as a string.
+  async function doPasswordReset(
+    code: string,
+    password: string
+  ): Promise<string> {
     const requestObject: object = {
       email: email,
       resetCode: code,
@@ -64,19 +59,55 @@ function ResetPassword() {
       // Parse the response
       const responseObject = JSON.parse(await response.text());
 
-      // Some error was returned
+      // Some error was returned from API
       if ("error" in responseObject && responseObject["error"] !== "") {
-        alert("error: " + responseObject["error"]);
-        return;
+        return responseObject["error"];
         // Successful signup
-      } else if (responseObject["success"] !== "") {
+      } else if (
+        "success" in responseObject &&
+        responseObject["success"] !== ""
+      ) {
+        setShowSuccessAlert(true);
         navigate("/login");
-        return;
+        return "";
+      } // Other
+      else {
+        return "Error: could not parse reset-password API response.";
       }
+      // Exception
     } catch (error) {
-      alert(error);
+      return "Exception occurred while resetting password: " + error;
     }
   }
+
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
+    const form: EventTarget & HTMLFormElement = event.currentTarget;
+    event.preventDefault();
+
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      setValidated(true);
+      return;
+    }
+    setValidated(true);
+
+    const code: string = form["validationCode"].value.trim();
+    const password: string = form["validationPassword"].value.trim();
+
+    const resetPasswordError: string = await doPasswordReset(code, password);
+
+    if (resetPasswordError !== "") {
+      setDangerAlertText(resetPasswordError);
+      setShowDangerAlert(true);
+      return;
+    }
+    setShowSuccessAlert(true);
+    navigate("/login");
+    return;
+  }
+
   return (
     <>
       <NavBar />
@@ -95,9 +126,22 @@ function ResetPassword() {
             <h2>Reset your Password</h2>
             <p>
               Enter the verification code sent to <strong>{email}</strong> along
-              with your new password
+              with your new password.
             </p>
-
+            <Alert
+              variant="danger"
+              show={showDangerAlert}
+              dismissible
+              onClose={() => {
+                setShowDangerAlert(false);
+                setDangerAlertText("");
+              }}
+            >
+              {dangerAlertText}
+            </Alert>
+            <Alert variant="success" show={showSuccessAlert}>
+              Password reset successful. Redirecting to login...
+            </Alert>
             {/* Form */}
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
               <Row className="mb-3 my-3">

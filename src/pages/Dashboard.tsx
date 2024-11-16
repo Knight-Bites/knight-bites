@@ -231,9 +231,7 @@ function Dashboard() {
 
       // Some error was returned
       if ("error" in responseObject && responseObject["error"] !== "") {
-        alert(
-          "Error returned from deleteRecipe API: " + responseObject["error"]
-        );
+        alert(responseObject["error"]);
         return;
         // Successful delete recipe
       } else {

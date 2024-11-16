@@ -18,6 +18,7 @@ function ForgotPassword() {
 
   const navigate = useNavigate();
 
+  // Returns "" if the action was successful, otherwise, returns the error as a string.
   async function sendCode(email: string): Promise<string> {
     const requestObject: object = {
       email: email,
@@ -40,9 +41,7 @@ function ForgotPassword() {
 
       // Some error was returned from API
       if ("error" in responseObject && responseObject["error"] !== "") {
-        return (
-          "Error returned from forgot-password API: " + responseObject["error"]
-        );
+        return responseObject["error"];
         // Successful code send
       } else if (
         "success" in responseObject &&

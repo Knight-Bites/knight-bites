@@ -168,9 +168,7 @@ function AddRecipe() {
 
       // Some error was returned from API
       if ("error" in responseObject && responseObject["error"] !== "") {
-        setDangerAlertText(
-          "Error returned from addrecipe API: " + responseObject["error"]
-        );
+        setDangerAlertText(responseObject["error"]);
         setShowDangerAlert(true);
         return;
         // Successful add recipe

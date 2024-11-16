@@ -65,6 +65,7 @@ function Verify() {
     }
   }
 
+  // Returns "" if the action was successful, otherwise, returns the error as a string.
   async function doVerification(code: string): Promise<string> {
     const requestObject: object = {
       email: email,
@@ -90,9 +91,7 @@ function Verify() {
 
       // Some error was returned from API
       if ("error" in responseObject && responseObject["error"] !== "") {
-        return (
-          "Error returned from verify-email API: " + responseObject["error"]
-        );
+        return responseObject["error"];
         // Successful verification
       } else if (
         "success" in responseObject &&
