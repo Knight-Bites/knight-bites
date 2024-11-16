@@ -342,6 +342,35 @@ function Dashboard() {
       return;
     }
   }
+
+  function getTabContent(
+    recipes: RecipeType[],
+    fallback_message: string
+  ): JSX.Element {
+    if (recipes.length === 0) {
+      return (
+        <div className="d-flex mx-auto p-5 align-items-center justify-content-center text-center">
+          <h5>{fallback_message}</h5>
+        </div>
+      );
+    } else {
+      return (
+        <>
+          {recipes.map((recipe) => (
+            <RecipeCard
+              key={recipe._id}
+              recipe={recipe}
+              userId={userId}
+              onDelete={handleInitiateDelete}
+              isFavorited={isRecipeInFavorites(recipe)}
+              favoriteOrUnfavorite={favoriteOrUnfavorite}
+            />
+          ))}{" "}
+        </>
+      );
+    }
+  }
+
   return (
     <>
       <NavBar />
@@ -400,44 +429,20 @@ function Dashboard() {
               </div>
 
               <Row xs={1} md={2} lg={3} className="g-4">
-                {currentRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe._id}
-                    recipe={recipe}
-                    userId={userId}
-                    onDelete={handleInitiateDelete}
-                    isFavorited={isRecipeInFavorites(recipe)}
-                    favoriteOrUnfavorite={favoriteOrUnfavorite}
-                  />
-                ))}
+                {getTabContent(currentRecipes, "")}
               </Row>
             </Tab.Pane>
             <Tab.Pane eventKey="favorites">
               <Row xs={1} md={2} lg={3} className="g-4">
-                {favoriteRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe._id}
-                    recipe={recipe}
-                    userId={userId}
-                    onDelete={handleInitiateDelete}
-                    isFavorited={isRecipeInFavorites(recipe)}
-                    favoriteOrUnfavorite={favoriteOrUnfavorite}
-                  />
-                ))}
+                {getTabContent(favoriteRecipes, "No favorites to show here!")}
               </Row>
             </Tab.Pane>
             <Tab.Pane eventKey="my-recipes">
               <Row xs={1} md={2} lg={3} className="g-4">
-                {myRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe._id}
-                    recipe={recipe}
-                    userId={userId}
-                    onDelete={handleInitiateDelete}
-                    isFavorited={isRecipeInFavorites(recipe)}
-                    favoriteOrUnfavorite={favoriteOrUnfavorite}
-                  />
-                ))}
+                {getTabContent(
+                  myRecipes,
+                  "No recipes of yours to show! To upload your first recipe, click the Add Recipe button."
+                )}
               </Row>
             </Tab.Pane>
           </Tab.Content>
