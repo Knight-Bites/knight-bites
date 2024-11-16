@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import AddRecipe from "./pages/AddRecipe";
 import Verify from "./pages/Verify";
+import ResetPassword from "./pages/ResetPassword";
 
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
@@ -15,4 +16,5 @@ export const router = createBrowserRouter([
   { path: "/forgotpassword", element: <ForgotPassword /> },
   { path: "/addrecipe", element: <AddRecipe /> },
   { path: "/verify", element: <Verify /> },
+  { path: "/resetpassword", element: <ResetPassword /> },
 ]);

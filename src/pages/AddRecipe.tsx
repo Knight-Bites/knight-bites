@@ -122,11 +122,16 @@ function AddRecipe() {
   async function doAddRecipe(title: string): Promise<void> {
     // Get the user's ID
     const userData = getUserData();
-    const userId: string = userData["id"];
-    if (Object.keys(userData).length === 0 || userId === "") {
+    if (Object.keys(userData).length === 0) {
       alert("error: no user logged in");
       return;
     }
+    const userId: string = userData["id"];
+    if (userId === "") {
+      alert("error: no user logged in");
+      return;
+    }
+    const fullName: string = userData["firstName"] + " " + userData["lastName"];
     console.log(croppedImageURL);
     // Get the encoding of the cropped image
     const imageEncoding: string = await getResizedImg(croppedImageURL || "");
@@ -137,6 +142,7 @@ function AddRecipe() {
 
     const requestObject: object = {
       userId: userId,
+      fullName: fullName,
       recipeName: title,
       recipeIngredients: ingredientsList,
       imageEncoding: imageEncoding,

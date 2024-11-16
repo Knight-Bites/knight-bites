@@ -150,6 +150,22 @@ function Login() {
             </Form.Group>
           </Row>
           <Button type="submit">Log In</Button>
+          <div className="pt-3 d-flex align-items-center">
+            <Button
+              className="p-0"
+              variant="link"
+              onClick={() => navigate("/forgotpassword")}
+            >
+              Forgot password?
+            </Button>
+          </div>
+
+          <div className="pt-1 d-flex align-items-center">
+            <p className="m-0">Don't have an account?</p>
+            <Button variant="link" onClick={() => navigate("/signup")}>
+              Sign Up
+            </Button>
+          </div>
         </Form>
       </Container>
     </>

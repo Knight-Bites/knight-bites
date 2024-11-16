@@ -5,7 +5,10 @@ import RecipeType from "../utils/RecipeType";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 import { MdOutlineStar, MdOutlineStarBorder } from "react-icons/md";
+import { BsTrash } from "react-icons/bs";
 import Button from "react-bootstrap/Button";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
 
 interface RecipeCardProps {
   recipe: RecipeType;
@@ -29,7 +32,7 @@ function RecipeCard({
     if (userId === recipe.userId) {
       return "You";
     }
-    return recipe.userId;
+    return recipe.fullName;
   };
   const getSeeMoreIngredients = (): JSX.Element => {
     if (recipe.recipeIngredients.length > 3) {
@@ -47,39 +50,40 @@ function RecipeCard({
     }
     return <></>;
   };
-  const getCardFooterContent = (recipeUserId: string): JSX.Element => {
-    if (userId === recipeUserId) {
+  const getCardFooterContent = (): JSX.Element => {
+    if (userId === recipe.userId) {
       return (
-        <Dropdown>
-          <Dropdown.Toggle variant="light" className="bg-transparent border-0">
-            Options
-          </Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item
-              eventKey="edit"
-              onClick={() => alert("Editing " + recipe.recipeName)}
-            >
-              Edit
-            </Dropdown.Item>
-            <Dropdown.Item eventKey="delete" onClick={() => onDelete(recipe)}>
-              Delete
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
+        <OverlayTrigger overlay={<Tooltip>Delete Recipe</Tooltip>}>
+          <Button
+            variant="light"
+            className="bg-transparent border-0"
+            onClick={() => onDelete(recipe)}
+          >
+            <BsTrash size="25px" />
+          </Button>
+        </OverlayTrigger>
       );
     } else {
       return (
-        <Button
-          variant="light"
-          className="bg-transparent border-0"
-          onClick={onFavoriteOrUnfavorite}
+        <OverlayTrigger
+          overlay={
+            <Tooltip>
+              {isFavorited ? "Unfavorite Recipe" : "Favorite Recipe"}
+            </Tooltip>
+          }
         >
-          {isFavorited ? (
-            <MdOutlineStar size="25px" />
-          ) : (
-            <MdOutlineStarBorder size="25px" />
-          )}
-        </Button>
+          <Button
+            variant="light"
+            className="bg-transparent border-0"
+            onClick={onFavoriteOrUnfavorite}
+          >
+            {isFavorited ? (
+              <MdOutlineStar size="25px" />
+            ) : (
+              <MdOutlineStarBorder size="25px" />
+            )}
+          </Button>
+        </OverlayTrigger>
       );
     }
   };
@@ -111,7 +115,7 @@ function RecipeCard({
         </ListGroup>
         <Card.Body className="d-flex p-1 justify-content-between">
           <div className="me-auto">{getSeeMoreIngredients()}</div>
-          <div>{getCardFooterContent(recipe.userId)}</div>
+          <div>{getCardFooterContent()}</div>
         </Card.Body>
       </Card>
     </Col>

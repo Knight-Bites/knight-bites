@@ -215,6 +215,13 @@ function Signup() {
           </Row>
 
           <Button type="submit">Sign Up</Button>
+
+          <div className="p-1 d-flex align-items-center">
+            <p className="m-0">Already have an account?</p>
+            <Button variant="link" onClick={() => navigate("/login")}>
+              Log in
+            </Button>
+          </div>
         </Form>
       </Container>
     </>
