@@ -32,6 +32,8 @@ function Dashboard() {
     useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentIndex, setCurrentIndex] = useState(6);  // Set initial to show 6 recipes
+  const [currentIndexFavorites, setCurrentIndexFavorites] = useState(6); // For Favorites
+  const [currentIndexMyRecipes, setCurrentIndexMyRecipes] = useState(6); // For My Recipes
   const navigate = useNavigate();
 
   async function searchRecipes(searchQuery: string): Promise<object[]> {
@@ -342,9 +344,19 @@ function Dashboard() {
     }
   }
 
+   // Functions for pagination
+  const handleLoadMoreFavorites = () => {
+    setCurrentIndexFavorites(currentIndexFavorites + 6);
+  };
+
+  const handleLoadMoreMyRecipes = () => {
+    setCurrentIndexMyRecipes(currentIndexMyRecipes + 6);
+  };
+
   function getTabContent(
     recipes: RecipeType[],
-    fallback_message: string
+    fallback_message: string,
+    currentIndex: number = recipes.length // Default to show all recipes if no index is provided
   ): JSX.Element {
     if (recipes.length === 0) {
       return (
@@ -355,7 +367,7 @@ function Dashboard() {
     } else {
       return (
         <>
-          {recipes.map((recipe) => (
+          {recipes.slice(0, currentIndex).map((recipe) => (
             <RecipeCard
               key={recipe._id}
               recipe={recipe}
@@ -364,11 +376,12 @@ function Dashboard() {
               isFavorited={isRecipeInFavorites(recipe)}
               favoriteOrUnfavorite={favoriteOrUnfavorite}
             />
-          ))}{" "}
+          ))}
         </>
       );
     }
   }
+  
 
   return (
     <>
@@ -444,16 +457,33 @@ function Dashboard() {
             </Tab.Pane>
             <Tab.Pane eventKey="favorites">
               <Row xs={1} md={2} lg={3} className="g-4">
-                {getTabContent(favoriteRecipes, "No favorites to show here!")}
+                {getTabContent(favoriteRecipes, "No favorites to show here!", currentIndexFavorites)}
               </Row>
+              <div className="d-flex justify-content-center mt-3">
+              <Button
+                variant="outline-primary"
+                onClick={() => setCurrentIndexFavorites(currentIndexFavorites + 6)}
+                className="mt-3"
+                disabled={currentIndexFavorites >= favoriteRecipes.length}
+              >
+                {currentIndexFavorites >= favoriteRecipes.length ? "No more favorites" : "Load More"}
+              </Button>
+              </div>
             </Tab.Pane>
             <Tab.Pane eventKey="my-recipes">
               <Row xs={1} md={2} lg={3} className="g-4">
-                {getTabContent(
-                  myRecipes,
-                  "No recipes of yours to show! To upload your first recipe, click the Add Recipe button."
-                )}
+                {getTabContent(myRecipes, "No recipes of yours to show!", currentIndexMyRecipes)}
               </Row>
+              <div className="d-flex justify-content-center mt-3">
+              <Button
+                variant="outline-primary"
+                onClick={() => setCurrentIndexMyRecipes(currentIndexMyRecipes + 6)}
+                className="mt-3"
+                disabled={currentIndexMyRecipes >= myRecipes.length}
+              >
+                {currentIndexMyRecipes >= myRecipes.length ? "No more recipes" : "Load More"}
+              </Button>
+              </div>
             </Tab.Pane>
           </Tab.Content>
         </Tab.Container>
