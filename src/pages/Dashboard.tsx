@@ -31,6 +31,7 @@ function Dashboard() {
   const [showSearchCriteriaBox, setShowSearchCriteriaBox] =
     useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentIndex, setCurrentIndex] = useState(6);  // Set initial to show 6 recipes
   const navigate = useNavigate();
 
   async function searchRecipes(searchQuery: string): Promise<object[]> {
@@ -427,8 +428,19 @@ function Dashboard() {
               </div>
 
               <Row xs={1} md={2} lg={3} className="g-4">
-                {getTabContent(currentRecipes, "")}
-              </Row>
+                {getTabContent(currentRecipes.slice(0, currentIndex), "")}
+              </Row>  
+              <div className="d-flex justify-content-center mt-3">
+                <Button
+                  variant="outline-primary"
+                  onClick={() => setCurrentIndex(currentIndex + 6)}
+                  className="mt-3"
+                  disabled={currentIndex >= currentRecipes.length}
+                >
+                  {currentIndex >= currentRecipes.length ? "No more recipes" : "Load More"}
+                </Button>
+              </div>
+
             </Tab.Pane>
             <Tab.Pane eventKey="favorites">
               <Row xs={1} md={2} lg={3} className="g-4">
