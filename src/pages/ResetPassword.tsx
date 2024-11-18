@@ -160,7 +160,9 @@ function ResetPassword() {
               </Row>
               <Row className="mb-3 my-3">
                 <Form.Group as={Col} controlId="validationPassword">
-                  <Form.Label className="text-start w-100">Password</Form.Label>
+                  <Form.Label className="text-start w-100">
+                    New Password
+                  </Form.Label>
                   <InputGroup hasValidation>
                     <Form.Control
                       type={showPassword ? "text" : "password"}
