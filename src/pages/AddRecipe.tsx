@@ -251,7 +251,7 @@ function AddRecipe() {
               <Form.Control
                 required
                 type="text"
-                placeholder="Chicken alfredo"
+                placeholder="Enter a title"
                 defaultValue=""
                 ref={titleInputRef}
               />
